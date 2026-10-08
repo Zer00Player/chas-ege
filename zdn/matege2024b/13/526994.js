@@ -96,12 +96,30 @@
 			return project3DTo2D(vertex, camera);
 		});
 
+		// Матрицу смежности берём у класса и работаем с её копией: сеттер
+		// connectionMatrix у IrregularTriangularPrism не работает - геттер возвращает
+		// собственный литерал и игнорирует присвоенное значение.
+		let matrix = prism.connectionMatrix.map(function(row) {
+			return row.slice();
+		});
+		// Невидимые рёбра рисуем пунктиром: в drawFigure значение-массив задаёт штрихи.
+		// matrix[i][j] - это ребро между точками i+1 и j, поэтому три ребра,
+		// инцидентные дальней от зрителя вершине 0, - это [0][0], [1][0] и [2][0].
+		// При нашей камере нижнее основание обращено от зрителя, а из боковых граней
+		// видны не все, так что невидимы ровно рёбра (0,1), (0,2) и (0,3);
+		// набор не зависит от пропорций призмы (проверено на всех a:b:h,
+		// которые способен выдать шаблон).
+		let dash = [7, 5];
+		matrix[0][0] = dash;
+		matrix[1][0] = dash;
+		matrix[2][0] = dash;
+
 		let paint1 = function(ctx) {
 			ctx.translate(200, 200);
 			ctx.strokeStyle = om.secondaryBrandColors.iz();
 			ctx.lineWidth = 2;
 
-			ctx.drawFigure(points2D, prism.connectionMatrix);
+			ctx.drawFigure(points2D, matrix);
 
 			// Отметка прямого угла - библиотечная arcBetweenSegments (приём из 509658.js)
 			// вместо ручного пересчёта направлений и повторного домножения на масштаб.
