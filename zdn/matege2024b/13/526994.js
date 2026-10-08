@@ -58,7 +58,15 @@
 		let text = textOptions[rand] + `Найдите объём призмы, если её высота равна $${h}$.`;
 		let analys = analysOptions[rand] + `Объём призмы: $V = S \\cdot h = ${S} \\cdot ${h} = ${V}$.`;
 
-		let vertices = prism.verticesOfFigure;
+		// Вершины берём у класса, но высоту восстанавливаем.
+		// findTriangleVertices() кладёт основание в плоскость z=-height/2, а затем
+		// вычитает z центра описанной окружности (тоже -height/2), из-за чего нижнее
+		// основание оказывается в z=0, а верхнее - в z=+height/2: высота призмы на
+		// чертеже выходит вдвое меньше заданной. Чертёж обязан быть пропорционален
+		// условию (md/task_geometry.md), поэтому возвращаем основания на -h/2 и +h/2.
+		let vertices = prism.verticesOfFigure.map(function(vertex, index) {
+			return { x: vertex.x, y: vertex.y, z: (index < 3 ? -0.5 : 0.5) * h };
+		});
 
 		let camera = {
 			x: 0,
