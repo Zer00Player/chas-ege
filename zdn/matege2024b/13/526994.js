@@ -21,7 +21,9 @@
 		);
 		let h = sl(Math.max(2, Math.ceil(Math.max(a, b) / 3)), Math.min(12, 3 * Math.min(a, b)));
 
-		// Призма с прямоугольным треугольником в основании
+		// Прямая призма с прямоугольным треугольником в основании - класс из lib/figure.js.
+		// Вершины: 0, 1, 2 - нижнее основание (прямой угол в вершине 0), 3, 4, 5 - верхнее,
+		// причём вершина i+3 лежит ровно над вершиной i.
 		let prism = new RectangularPrismWithRightAngledTriangleAtBase({
 			height: h,
 			sideA: a,
@@ -56,83 +58,53 @@
 		let text = textOptions[rand] + `Найдите объём призмы, если её высота равна $${h}$.`;
 		let analys = analysOptions[rand] + `Объём призмы: $V = S \\cdot h = ${S} \\cdot ${h} = ${V}$.`;
 
+		let vertices = prism.verticesOfFigure;
+
+		let camera = {
+			x: 0,
+			y: 0,
+			z: 0,
+			scale: 5,
+			rotationX: -Math.PI / 2 + Math.PI / 9,
+			rotationY: 0,
+			rotationZ: Math.PI / 10,
+		};
+
+		// autoScale() сама проектирует вершины и ДОБИРАЕТ camera.scale до нужного,
+		// поэтому после неё проекцию пересчитываем уже с подобранным масштабом
+		// (приём из zdn/matege2024b/13/509658.js).
+		// Вручную домножать координаты на camera.scale нельзя: project3DTo2D() уже
+		// умножает на него, повторное умножение уводило отметку прямого угла за холст.
+		autoScale(vertices, camera, vertices.map(function(vertex) {
+			return project3DTo2D(vertex, camera);
+		}), {
+			startX: -150,
+			finishX: 150,
+			startY: -150,
+			finishY: 150,
+			maxScale: 200,
+		});
+		let points2D = vertices.map(function(vertex) {
+			return project3DTo2D(vertex, camera);
+		});
+
 		let paint1 = function(ctx) {
-			let vertices = prism.verticesOfFigure;
-			let connectionMatrix = prism.connectionMatrix;
-
-			// Настройка камеры для проекции
-			let camera = {
-				x: 0,
-				y: 0,
-				z: 0,
-				scale: 1,
-				rotationX: 0.3,
-				rotationY: 0.5,
-				rotationZ: 0,
-			};
-
-			// Автомасштабирование: проекция 3D→2D + подбор масштаба
-			let points2D = autoScale(vertices, camera, [], {
-				startX: -180,
-				finishX: 180,
-				startY: -180,
-				finishY: 180,
-				step: 0.5,
-				maxScale: 50,
-			});
-
 			ctx.translate(200, 200);
 			ctx.strokeStyle = om.secondaryBrandColors.iz();
 			ctx.lineWidth = 2;
 
-			// Рисуем фигуру по матрице смежности
-			ctx.drawFigure(points2D, connectionMatrix);
+			ctx.drawFigure(points2D, prism.connectionMatrix);
 
-			// Отметка прямого угла при вершине 0 основания
-			let t = 0.15 * Math.min(a, b);
-			let v0 = vertices[0];
-			let v1 = vertices[1];
-			let v2 = vertices[2];
-
-			let len1 = Math.sqrt((v1.x - v0.x) ** 2 + (v1.y - v0.y) ** 2);
-			let len2 = Math.sqrt((v2.x - v0.x) ** 2 + (v2.y - v0.y) ** 2);
-			let dir1 = {
-				x: (v1.x - v0.x) / len1,
-				y: (v1.y - v0.y) / len1,
-				z: v0.z,
-			};
-			let dir2 = {
-				x: (v2.x - v0.x) / len2,
-				y: (v2.y - v0.y) / len2,
-				z: v0.z,
-			};
-
-			let q1 = project3DTo2D({
-				x: v0.x + t * dir1.x,
-				y: v0.y + t * dir1.y,
-				z: v0.z,
-			}, camera);
-			let q2 = project3DTo2D({
-				x: v0.x + t * dir1.x + t * dir2.x,
-				y: v0.y + t * dir1.y + t * dir2.y,
-				z: v0.z,
-			}, camera);
-			let q3 = project3DTo2D({
-				x: v0.x + t * dir2.x,
-				y: v0.y + t * dir2.y,
-				z: v0.z,
-			}, camera);
-
-			// Масштабируем точки отметки прямого угла
-			q1.x *= camera.scale;
-			q1.y *= camera.scale;
-			q2.x *= camera.scale;
-			q2.y *= camera.scale;
-			q3.x *= camera.scale;
-			q3.y *= camera.scale;
-
-			ctx.drawLine(q1.x, q1.y, q2.x, q2.y);
-			ctx.drawLine(q2.x, q2.y, q3.x, q3.y);
+			// Отметка прямого угла - библиотечная arcBetweenSegments (приём из 509658.js)
+			// вместо ручного пересчёта направлений и повторного домножения на масштаб.
+			// Прямой угол при вершине 0 нижнего основания; отмечаем в верхнем основании
+			// (вершина 3, катеты к вершинам 4 и 5), потому что при такой камере нижнее
+			// основание обращено от зрителя.
+			ctx.arcBetweenSegments([
+				points2D[4].x, points2D[4].y,
+				points2D[3].x, points2D[3].y,
+				points2D[5].x, points2D[5].y,
+			], 14, true);
 		};
 
 		NAtask.setTask({
