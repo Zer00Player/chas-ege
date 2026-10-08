@@ -178,7 +178,10 @@
 			analys: analys,
 			answers: V,
 			authors: ['Селена'],
-			preference: preference,
+			// Список списков: именно так передают preference соседние шаблоны папки
+			// (509658.js, 536908.js) и примеры с несколькими независимыми preference
+			// из md/create_a_task.md.
+			preference: [preference],
 		});
 		// variativeABC() проходит по всем строкам задания, поэтому:
 		// - S и H сохраняем, иначе обозначения площади и высоты в решении заменились бы
