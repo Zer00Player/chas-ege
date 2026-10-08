@@ -1,5 +1,6 @@
-(function() {
-	retryWhileError(function() {
+(function () {
+	'use strict';
+	retryWhileError(function () {
 		NAinfo.requireApiVersion(0, 2);
 
 		let key = '526994';
@@ -49,9 +50,7 @@
 		// Обозначения вершин: нижнее основание и оно же с индексом 1
 		let letters = latbukv.slice(0, 3);
 		let osn = letters.join('');
-		let prismName = osn + letters.map(function(letter) {
-			return letter + '_1';
-		}).join('');
+		let prismName = osn + letters.map((letter) => letter + '_1').join('');
 		let ab = letters[0] + letters[1];
 		let ac = letters[0] + letters[2];
 		let bc = letters[1] + letters[2];
@@ -81,9 +80,8 @@
 		// основание оказывается в z=0, а верхнее - в z=+height/2: высота призмы на
 		// чертеже выходит вдвое меньше заданной. Чертёж обязан быть пропорционален
 		// условию (md/task_geometry.md), поэтому возвращаем основания на -h/2 и +h/2.
-		let vertices = prism.verticesOfFigure.map(function(vertex, index) {
-			return { x: vertex.x, y: vertex.y, z: (index < 3 ? -0.5 : 0.5) * h };
-		});
+		let vertices = prism.verticesOfFigure.map((vertex, index) =>
+			({ x: vertex.x, y: vertex.y, z: (index < 3 ? -0.5 : 0.5) * h }));
 
 		let camera = {
 			x: 0,
@@ -100,25 +98,19 @@
 		// (приём из zdn/matege2024b/13/509658.js).
 		// Вручную домножать координаты на camera.scale нельзя: project3DTo2D() уже
 		// умножает на него, повторное умножение уводило отметку прямого угла за холст.
-		autoScale(vertices, camera, vertices.map(function(vertex) {
-			return project3DTo2D(vertex, camera);
-		}), {
+		autoScale(vertices, camera, vertices.map((vertex) => project3DTo2D(vertex, camera)), {
 			startX: -150,
 			finishX: 150,
 			startY: -150,
 			finishY: 150,
 			maxScale: 200,
 		});
-		let points2D = vertices.map(function(vertex) {
-			return project3DTo2D(vertex, camera);
-		});
+		let points2D = vertices.map((vertex) => project3DTo2D(vertex, camera));
 
 		// Матрицу смежности берём у класса и работаем с её копией: сеттер
 		// connectionMatrix у IrregularTriangularPrism не работает - геттер возвращает
 		// собственный литерал и игнорирует присвоенное значение.
-		let matrix = prism.connectionMatrix.map(function(row) {
-			return row.slice();
-		});
+		let matrix = prism.connectionMatrix.map((row) => row.slice());
 		// Невидимые рёбра рисуем пунктиром: в drawFigure значение-массив задаёт штрихи.
 		// matrix[i][j] - это ребро между точками i+1 и j, поэтому три ребра,
 		// инцидентные дальней от зрителя вершине 0, - это [0][0], [1][0] и [2][0].
@@ -131,7 +123,7 @@
 		matrix[1][0] = dash;
 		matrix[2][0] = dash;
 
-		let paint1 = function(ctx) {
+		let paint1 = function (ctx) {
 			ctx.translate(200, 200);
 			ctx.strokeStyle = om.secondaryBrandColors.iz();
 			ctx.lineWidth = 2;
@@ -155,10 +147,10 @@
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			let center = {
-				x: points2D.reduce(function(sum, point) { return sum + point.x; }, 0) / points2D.length,
-				y: points2D.reduce(function(sum, point) { return sum + point.y; }, 0) / points2D.length,
+				x: points2D.reduce((sum, point) => sum + point.x, 0) / points2D.length,
+				y: points2D.reduce((sum, point) => sum + point.y, 0) / points2D.length,
 			};
-			let put = function(point, letter, subscript) {
+			let put = function (point, letter, subscript) {
 				let dx = point.x - center.x;
 				let dy = point.y - center.y;
 				let length = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -177,7 +169,7 @@
 			text: text,
 			analys: analys,
 			answers: V,
-			authors: ['Селена'],
+			authors: ['chas-ege-selena'],
 			// Список списков: именно так передают preference соседние шаблоны папки
 			// (509658.js, 536908.js) и примеры с несколькими независимыми preference
 			// из md/create_a_task.md.
@@ -196,4 +188,6 @@
 		});
 	}, 1000);
 })();
-// 526994 https://mathb-ege.sdamgia.ru/problem?id=526994
+//526994
+//chas-ege-selena
+//https://mathb-ege.sdamgia.ru/problem?id=526994
