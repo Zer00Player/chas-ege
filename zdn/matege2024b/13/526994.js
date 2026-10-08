@@ -46,17 +46,34 @@
 		let c2 = a * a + b * b;
 		let cLatex = c2.texsqrt(true);
 
+		// Обозначения вершин: нижнее основание и оно же с индексом 1
+		let letters = latbukv.slice(0, 3);
+		let osn = letters.join('');
+		let prismName = osn + letters.map(function(letter) {
+			return letter + '_1';
+		}).join('');
+		let ab = letters[0] + letters[1];
+		let ac = letters[0] + letters[2];
+		let bc = letters[1] + letters[2];
+
 		let textOptions = [
-			`В основании прямой призмы лежит прямоугольный треугольник, катеты которого равны $${[a, b].shuffle().join('$ и $')}$. `,
-			`В основании прямой призмы лежит прямоугольный треугольник, один из катетов которого равен $${a}$, а гипотенуза равна $${cLatex}$. `,
+			'В основании прямой призмы $' + prismName + '$ лежит прямоугольный треугольник $' + osn +
+				'$ с прямым углом при вершине $' + letters[0] + '$ и катетами $' + ab + ' = ' + a +
+				'$ и $' + ac + ' = ' + b + '$. ',
+			'В основании прямой призмы $' + prismName + '$ лежит прямоугольный треугольник $' + osn +
+				'$ с прямым углом при вершине $' + letters[0] + '$, катет $' + ab + '$ равен $' + a +
+				'$, а гипотенуза $' + bc + '$ равна $' + cLatex + '$. ',
 		];
 		let analysOptions = [
-			`Площадь прямоугольного треугольника равна половине произведения катетов: $S = \\frac{${a} \\cdot ${b}}{2} = ${S}$. `,
-			`По теореме Пифагора второй катет равен $\\sqrt{${cLatex}^2 - ${a}^2} = \\sqrt{${c2} - ${a * a}} = \\sqrt{${b * b}} = ${b}$. Площадь основания: $S = \\frac{${a} \\cdot ${b}}{2} = ${S}$. `,
+			'Площадь прямоугольного треугольника равна половине произведения катетов: $S = \\frac{' +
+				a + ' \\cdot ' + b + '}{2} = ' + S + '$. ',
+			'По теореме Пифагора катет $' + ac + ' = \\sqrt{' + bc + '^2 - ' + ab + '^2} = \\sqrt{' +
+				c2 + ' - ' + a * a + '} = \\sqrt{' + b * b + '} = ' + b +
+				'$. Площадь основания: $S = \\frac{' + a + ' \\cdot ' + b + '}{2} = ' + S + '$. ',
 		];
 
-		let text = textOptions[rand] + `Найдите объём призмы, если её высота равна $${h}$.`;
-		let analys = analysOptions[rand] + `Объём призмы: $V = S \\cdot h = ${S} \\cdot ${h} = ${V}$.`;
+		let text = textOptions[rand] + 'Найдите объём призмы, если её высота равна $' + h + '$.';
+		let analys = analysOptions[rand] + 'Объём призмы: $V = S \\cdot h = ' + S + ' \\cdot ' + h + ' = ' + V + '$.';
 
 		// Вершины берём у класса, но высоту восстанавливаем.
 		// findTriangleVertices() кладёт основание в плоскость z=-height/2, а затем
@@ -131,6 +148,29 @@
 				points2D[3].x, points2D[3].y,
 				points2D[5].x, points2D[5].y,
 			], 14, true);
+
+			// Подписи вершин: нижнее основание - просто буквы, верхнее - с индексом 1
+			ctx.fillStyle = om.secondaryBrandColors.iz();
+			ctx.font = '20px liberation_sans';
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			let center = {
+				x: points2D.reduce(function(sum, point) { return sum + point.x; }, 0) / points2D.length,
+				y: points2D.reduce(function(sum, point) { return sum + point.y; }, 0) / points2D.length,
+			};
+			let put = function(point, letter, subscript) {
+				let dx = point.x - center.x;
+				let dy = point.y - center.y;
+				let length = Math.sqrt(dx * dx + dy * dy) || 1;
+				ctx.fillText(letter, point.x + 20 * dx / length, point.y + 20 * dy / length);
+				if (subscript) {
+					ctx.fillText(subscript, point.x + 20 * dx / length + 11, point.y + 20 * dy / length + 5);
+				}
+			};
+			for (let i = 0; i < 3; i++) {
+				put(points2D[i], letters[i]);
+				put(points2D[i + 3], letters[i], '₁');
+			}
 		};
 
 		NAtask.setTask({
@@ -140,6 +180,12 @@
 			authors: ['Селена'],
 			preference: preference,
 		});
+		// variativeABC() проходит по всем строкам задания, поэтому:
+		// - S и H сохраняем, иначе обозначения площади и высоты в решении заменились бы
+		//   случайными буквами (получалось «$U = \frac{19 \cdot 16}{2}$» вместо «$S = ...$»);
+		// - E, I, K, O, V, Z не берём в качестве вершин - именно их исключает проектный
+		//   массив latbukv, чтобы буквы не путались с цифрами и другими обозначениями.
+		NAtask.modifiers.variativeABC(letters, { preserve: ['S', 'H', 'E', 'I', 'K', 'O', 'V', 'Z'] });
 		NAtask.modifiers.addCanvasIllustration({
 			width: 400,
 			height: 400,
